@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+streamlit
+rich
+requests
+jinja2
+fastapi[full]
+subprocess32 ; platform_system=="Windows"
+pyinstaller ; platform_system=="Windows"

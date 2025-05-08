@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>📝 Редактор скриптов</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap @5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light text-dark">
+<div class="container py-5">
+    <h1 class="mb-4">📝 Редактор скриптов</h1>
+
+    <div class="mb-3">
+        <label for="script_path" class="form-label">Путь к скрипту</label>
+        <input type="text" class="form-control" id="script_path" value="{{ script_path }}">
+    </div>
+
+    <div class="mb-3">
+        <label for="script_content" class="form-label">Содержимое скрипта</label>
+        <textarea class="form-control" id="script_content" rows="15">{{ script_content }}</textarea>
+    </div>
+
+    <button class="btn btn-primary" onclick="saveAndRun()">▶️ Сохранить и запустить автоисправление</button>
+</div>
+
+<script>
+async function saveAndRun() {
+    const path = document.getElementById("script_path").value;
+    const content = document.getElementById("script_content").value;
+
+    // Сначала сохраним текущий скрипт
+    const saveResponse = await fetch("/script/save", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ script_path: path, script_content: content })
+    });
+
+    if (!saveResponse.ok) {
+        alert("❌ Не удалось сохранить скрипт");
+        return;
+    }
+
+    // Затем запустим автоисправление
+    const runResponse = await fetch("/run", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ script_path: path, max_retries: 5 })
+    });
+
+    const result = await runResponse.json();
+    if (result.status === "success") {
+        alert("✅ Скрипт выполнен успешно!");
+        window.location.href = "/";
+    } else {
+        alert("🔄 ИИ пытается исправить скрипт...");
+        window.location.href = "/run";
+    }
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap @5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

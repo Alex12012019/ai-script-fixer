@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>🧠 AI Script Fixer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap @5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light text-dark">
+<div class="container py-5">
+    <h1 class="mb-4">🧠 AI-Powered Script Fixer</h1>
+    <p class="lead">Сервер для автоматического исправления скриптов через ИИ</p>
+
+    <hr class="my-4">
+
+    <div class="row">
+        <div class="col-md-6">
+            <h3>▶️ Запустить скрипт</h3>
+            <form id="runForm" action="/run" method="post">
+                <input type="hidden" name="script_path" value="../scripts/SelfConfiguring-FaissCache.ps1">
+                <button type="submit" class="btn btn-success">Запустить автоисправление</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h3>📁 История фиксов</h3>
+            {% if history %}
+                <ul class="list-group">
+                {% for item in history %}
+                    <li class="list-group-item">{{ loop.index }}. {{ item.script }} → {{ item.status }}</li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">История пока пуста.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <hr class="my-4">
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">🔗 Полезные ссылки</h5>
+            <a href="/docs" class="btn btn-primary me-2">Swagger Docs</a>
+            <a href="/redoc" class="btn btn-outline-secondary me-2">ReDoc</a>
+            <a href="http://localhost:8501" target="_blank" class="btn btn-info text-white">Web UI</a>
+        </div>
+    </div>
+</div>
+
+<!-- Добавляем JavaScript для отправки в формате JSON -->
+<script>
+document.getElementById('runForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const scriptPath = form.querySelector("input[name='script_path']").value;
+
+    const response = await fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ script_path: scriptPath, max_retries: 5 })
+    });
+
+    const result = await response.json();
+    alert(result.status === 'success' ? '✅ Скрипт выполнен!' : '❌ Не удалось исправить');
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap @5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<a href="/script/edit" class="btn btn-outline-primary me-2">Редактировать скрипт</a>
+<a href="/script/list" class="btn btn-outline-secondary me-2">📋 Список скриптов</a>
+
+</body>
+</html>
