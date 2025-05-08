@@ -33,5 +33,15 @@
         "script": "C:\\Users\\\u0410\u043b\u0435\u043a\u0441\u0435\u0439\\PycharmProjects\\faiss-cache-autofixer-web\\scripts\\SelfConfiguring-FaissCache.ps1",
         "retries": 5,
         "status": "success"
+    },
+    {
+        "script": "../scripts/SelfConfiguring-FaissCache.ps1",
+        "retries": 5,
+        "status": "success"
+    },
+    {
+        "script": "C:\\Users\\\u0410\u043b\u0435\u043a\u0441\u0435\u0439\\PycharmProjects\\faiss-cache-autofixer-web\\scripts\\SelfConfiguring-FaissCache.ps1",
+        "retries": 5,
+        "status": "success"
     }
 ]
