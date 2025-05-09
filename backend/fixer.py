@@ -21,10 +21,10 @@ def call_llm(prompt: str, model="Qwen3-14B-Instruct", host="http://localhost:123
         response = requests.post(host, json=payload, timeout=60)
         if response.status_code == 200:
             content = response.json()['choices'][0]['message']['content']
-            console.print(f"[green][+] ИИ вернул результат ({model})[/green]")
+            console.log(f"[green][+] ИИ вернул результат ({model})[/green]")
             return content
         else:
-            console.print(f"[red][-] Ошибка от модели: {response.text}[/red]")
+            console.log(f"[red][-] Ошибка от модели: {response.text}[/red]")
             return ""
     except Exception as e:
         console.print(f"[red][-] Не удалось подключиться к модели: {e}[/red]")

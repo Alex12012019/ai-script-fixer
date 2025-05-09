@@ -15,10 +15,11 @@ from typing import Optional
 console = Console()
 
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+scripts_dir = os.path.join(project_root, "scripts")
 sys.path.append(project_root)
 
 # Добавляем SCRIPT_PATH
-SCRIPT_PATH = os.path.join(project_root, "scripts", "SelfConfiguring-FaissCache.ps1")
+SCRIPT_PATH = os.path.join(scripts_dir, "SelfConfiguring-FaissCache.ps1")
 
 # Инициализируем шаблонизатор
 templates = Jinja2Templates(directory=os.path.join(project_root, "templates"))
@@ -111,10 +112,14 @@ def edit_script(request: Request, script_path: str = SCRIPT_PATH):
         return {"error": str(e)}
 
 @app.get("/script/list")
-def list_scripts():
+def list_scripts(request: Request):
     scripts_dir = os.path.join(project_root, "scripts")
     script_files = [f for f in os.listdir(scripts_dir) if f.endswith((".ps1", ".sh", ".bat", ".py"))]
-    return {"scripts": script_files}
+
+    return templates.TemplateResponse("script_list.html", {
+        "request": request,
+        "scripts": script_files
+    })
 
 @app.get("/script/load")
 def load_script(name: str):
@@ -122,16 +127,20 @@ def load_script(name: str):
     if not os.path.exists(path):
         return {"error": "Файл не найден"}
 
+    print("load ", path)
     with open(path, "rb") as f:
         raw = f.read()
+    print("loaded ", path)
 
     result = chardet.detect(raw)
     encoding = result['encoding'] or 'utf-8'
 
     try:
         content = raw.decode(encoding)
+        print("encoded ", path, " to utf-8")
     except UnicodeDecodeError:
         content = raw.decode("latin-1", errors="replace")
+        print("err encoded to utf-8. encoded ", path, " latin-1")
 
     return {"script_path": path, "content": content}
 

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Скрипты</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      color: #333;
+    }
+
+    ul.script-list {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    ul.script-list li {
+      padding: 10px;
+      margin-bottom: 8px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+    }
+
+    ul.script-list li label {
+      cursor: pointer;
+      flex-grow: 1;
+    }
+
+    ul.script-list li input[type="checkbox"] {
+      margin-right: 10px;
+    }
+
+    .selected-count {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    #drop-area {
+      border: 2px dashed #ccc;
+      padding: 20px;
+      margin-top: 20px;
+      text-align: center;
+      color: #555;
+      cursor: pointer;
+    }
+
+    #drop-area.hover {
+      border-color: #007BFF;
+      background-color: #e6f1ff;
+    }
+
+    .btn {
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+
+    .btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Список доступных скриптов</h1>
+
+  <ul class="script-list" id="script-list">
+    {% if scripts %}
+      {% for script in scripts %}
+        <li>
+          <input type="checkbox" id="script-{{ loop.index }}" name="scripts" value="{{ script }}">
+          <label for="script-{{ loop.index }}">{{ script }}</label>
+        </li>
+      {% endfor %}
+    {% else %}
+      <p>Скрипты не найдены.</p>
+    {% endif %}
+  </ul>
+
+  <div class="selected-count" id="selected-count">Выбрано: 0 файлов</div>
+
+  <h2>📁 Перетащите файл сюда</h2>
+  <div id="drop-area">
+    Перетащите файл сюда или нажмите, чтобы выбрать
+    <input type="file" id="fileElem" multiple style="display:none">
+  </div>
+
+  <button class="btn" onclick="saveAndRun()">▶️ Сохранить и запустить автоисправление</button>
+
+  <script>
+    const scriptList = document.getElementById("script-list");
+    const selectedCount = document.getElementById("selected-count");
+    const fileInput = document.getElementById("fileElem");
+    const dropArea = document.getElementById("drop-area");
+
+    // Обновление счётчика выбранных файлов
+    function updateSelectedCount() {
+      const count = document.querySelectorAll('input[name="scripts"]:checked').length;
+      selectedCount.textContent = "Выбрано: " + count + " файлов";
+    }
+
+    // Добавление файла в список
+    function addScriptToList(fullPath, file) {
+      // Проверяем, не добавлен ли уже такой файл
+      const exists = Array.from(scriptList.querySelectorAll("input")).some(
+        el => el.value === fullPath
+      );
+      if (exists) return;
+
+      const li = document.createElement("li");
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.name = "scripts";
+      checkbox.id = "upload-" + Date.now() + "-" + Math.random().toString(36).substr(2, 5);
+      checkbox.value = fullPath;
+
+      checkbox.addEventListener("change", updateSelectedCount);
+
+      const label = document.createElement("label");
+      label.setAttribute("for", checkbox.id);
+      label.textContent = fullPath;
+
+      li.appendChild(checkbox);
+      li.appendChild(label);
+
+      scriptList.appendChild(li);
+    }
+
+    // Обработка файлов при выборе/перетаскивании
+    function handleFiles(files, e) {
+      const items = e?.dataTransfer?.items;
+
+      if (items) {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i].webkitGetAsEntry();
+          if (item && item.isFile) {
+            item.file(file => {
+              const fullPath = item.fullPath || file.name;
+              addScriptToList(fullPath, file);
+            });
+          }
+        }
+      } else {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const fullPath = file.webkitRelativePath || file.name;
+          addScriptToList(fullPath, file);
+        }
+      }
+
+      updateSelectedCount();
+    }
+
+    // Drag & Drop события
+    dropArea.addEventListener("click", () => fileInput.click());
+
+    ["dragenter", "dragover"].forEach(eventName => {
+      dropArea.addEventListener(eventName, e => {
+        e.preventDefault();
+        dropArea.classList.add("hover");
+      });
+    });
+
+    ["dragleave", "drop"].forEach(eventName => {
+      dropArea.addEventListener(eventName, e => {
+        e.preventDefault();
+        dropArea.classList.remove("hover");
+      });
+    });
+
+    dropArea.addEventListener("drop", e => {
+      const files = e.dataTransfer.files;
+      handleFiles(files, e);
+    });
+
+    fileInput.addEventListener("change", e => {
+      const files = e.target.files;
+      handleFiles(files, e);
+    });
+
+    // Инициализация счётчика при загрузке
+    document.querySelectorAll('input[name="scripts"]').forEach(cb => {
+      cb.addEventListener("change", updateSelectedCount);
+    });
+    updateSelectedCount();
+
+    // saveAndRun — получает выбранный файл и его содержимое
+    async function saveAndRun() {
+      const checked = document.querySelector('input[name="scripts"]:checked');
+      if (!checked) {
+        alert("❌ Ничего не выбрано.");
+        return;
+      }
+
+      const path = checked.value;
+
+      // Ищем соответствующий File-объект
+      const fileInput = document.getElementById("fileElem");
+      const file = Array.from(fileInput.files).find(f =>
+        f.webkitRelativePath === path || f.name === path
+      );
+
+      if (!file) {
+        alert("⚠️ Не удалось найти файл. Возможно, он ещё не загружен.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const content = e.target.result;
+
+        // Сначала сохраним текущий скрипт
+        const saveResponse = await fetch("/script/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ script_path: path, script_content: content })
+        });
+
+        if (!saveResponse.ok) {
+          alert("❌ Не удалось сохранить скрипт");
+          return;
+        }
+
+        // Затем запустим автоисправление
+        const runResponse = await fetch("/run", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ script_path: path, max_retries: 5 })
+        });
+
+        const result = await runResponse.json();
+        if (result.status === "success") {
+          alert("✅ Скрипт выполнен успешно!");
+          window.location.href = "/";
+        } else {
+          alert("🔄 ИИ пытается исправить скрипт...");
+          window.location.href = "/run";
+        }
+      };
+
+      reader.readAsText(file);
+    }
+  </script>
+
+</body>
+</html>

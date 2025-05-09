@@ -1,0 +1,7 @@
+<think>
+
+</think>
+
+```powershell
+pip install fastapi uvicorn streamlit rich requests jinja2 fastapi[full] subprocess32 pyinstaller
+```
